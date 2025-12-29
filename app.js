@@ -1,4 +1,4 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzFc9dgpjcD3CQOjeeiXkeBvETiF21d74jt6e-SuKJ5oDfssq2ANXTe8ndln42rBLiFGg/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwdG-fC3TiGlWulQT1TIn7drSlTXJcpaJ1dIQ87RgcfXs9bISrE90YQo9xVHMT7Fuz0/exec";
 
 let sheetData = [];
 let highlights = [];
@@ -208,4 +208,5 @@ function exportCSV() {
   a.download = "search_results.csv";
   a.click();
 }
+
 
