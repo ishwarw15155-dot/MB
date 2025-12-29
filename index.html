@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search App (Group + Value)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    body { font-family: Arial; margin:0; padding:10px; }
+    h2 { text-align:center; }
+
+    .row { display:flex; flex-direction:column; margin-bottom:8px; }
+    label { font-weight:bold; margin-top:4px; }
+
+    select, input, button {
+      padding:8px;
+      font-size:14px;
+      margin-top:4px;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    @media (min-width:700px) {
+      .row { flex-direction:row; gap:10px; }
+      .row > div { flex:1; }
+    }
+
+    .btn-bar {
+      position:sticky;
+      top:0;
+      background:#fff;
+      border-bottom:1px solid #ccc;
+      padding:6px;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      z-index:100;
+    }
+
+    table { border-collapse:collapse; width:100%; margin-top:8px; }
+    td {
+      border:1px solid #999;
+      padding:3px;
+      text-align:center;
+      min-width:36px;
+      font-size:13px;
+    }
+
+    .num     { font-weight:bold; }
+    .search  { background: lightgreen; }
+    .result  { background: yellow; }
+    .result2 { background: pink; }
+
+    .hidden { display:none; }
+  </style>
+</head>
+
+<body>
+
+<h2>Search (Excel VBA Logic)</h2>
+
+<!-- MODE -->
+<div class="row">
+  <div>
+    <label>Search Mode</label>
+    <select id="searchMode" onchange="toggleMode()">
+      <option value="group">Group Search</option>
+      <option value="value">Value Search</option>
+    </select>
+  </div>
+</div>
+
+<!-- COMMON -->
+<div class="row">
+  <div>
+    <label>Search Column</label>
+    <select id="searchCol">
+      <option value="1">B</option>
+      <option value="2">C</option>
+      <option value="3">D</option>
+      <option value="4">E</option>
+      <option value="5">F</option>
+      <option value="6">G</option>
+    </select>
+  </div>
+</div>
+
+<!-- GROUP MODE -->
+<div id="groupBox">
+  <div class="row">
+    <div>
+      <label>Search Group</label>
+      <select id="searchGroup"></select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Result Column 1</label>
+      <select id="resultCol1">
+        <option value="1">B</option>
+        <option value="2">C</option>
+        <option value="3">D</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">G</option>
+      </select>
+    </div>
+    <div>
+      <label>Result Group 1</label>
+      <select id="resultGroup1"></select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Result Column 2</label>
+      <select id="resultCol2">
+        <option value="">None</option>
+        <option value="1">B</option>
+        <option value="2">C</option>
+        <option value="3">D</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">G</option>
+      </select>
+    </div>
+    <div>
+      <label>Result Group 2</label>
+      <select id="resultGroup2"></select>
+    </div>
+  </div>
+</div>
+
+<!-- VALUE MODE -->
+<div id="valueBox" class="hidden">
+  <div class="row">
+    <div>
+      <label>Search Value (00–99)</label>
+      <input id="searchValue" maxlength="2">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Result Column 1</label>
+      <select id="valResultCol1">
+        <option value="1">B</option>
+        <option value="2">C</option>
+        <option value="3">D</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">G</option>
+      </select>
+    </div>
+    <div>
+      <label>Result Value 1</label>
+      <input id="resultValue1" maxlength="2">
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Result Column 2</label>
+      <select id="valResultCol2">
+        <option value="">None</option>
+        <option value="1">B</option>
+        <option value="2">C</option>
+        <option value="3">D</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">G</option>
+      </select>
+    </div>
+    <div>
+      <label>Result Value 2</label>
+      <input id="resultValue2" maxlength="2">
+    </div>
+  </div>
+</div>
+
+<!-- BUTTONS -->
+<div class="btn-bar">
+  <button onclick="search()"><i class="fa fa-search"></i></button>
+  <button onclick="next()"><i class="fa fa-arrow-down"></i></button>
+  <button onclick="prev()"><i class="fa fa-arrow-up"></i></button>
+  <button onclick="resetAll()"><i class="fa fa-rotate-left"></i></button>
+  <button onclick="exportCSV()"><i class="fa fa-file-csv"></i></button>
+</div>
+
+<div id="table"></div>
+
+<script src="app.js?v=1"></script>
+</body>
+</html>

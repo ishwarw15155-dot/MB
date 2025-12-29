@@ -1,0 +1,211 @@
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzFc9dgpjcD3CQOjeeiXkeBvETiF21d74jt6e-SuKJ5oDfssq2ANXTe8ndln42rBLiFGg/exec";
+
+let sheetData = [];
+let highlights = [];
+let currentIndex = -1;
+let cellMap = {};
+
+// GROUP DEFINITIONS
+const groups = {
+  Group55:["00","05","50","55"],
+  Group11:["11","16","61","66"],
+  Group33:["33","38","83","88"],
+  Group44:["44","49","94","99"],
+  Group22:["22","27","72","77"],
+  Group12:["12","17","21","26","62","67","71","76"],
+  Group13:["13","18","31","36","63","68","81","86"],
+  Group14:["14","19","41","46","64","69","91","96"],
+  Group15:["01","06","10","15","51","56","60","65"],
+  Group23:["23","28","32","37","73","78","82","87"],
+  Group24:["24","29","42","47","74","79","92","97"],
+  Group25:["02","07","20","25","52","57","70","75"],
+  Group34:["34","39","43","48","84","89","93","98"],
+  Group35:["03","08","30","35","53","58","80","85"],
+  Group45:["04","09","40","45","54","59","90","95"]
+};
+
+// DISPLAY FORMAT
+function normalizeForDisplay(v) {
+  if (v === null || v === undefined) return "";
+
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) {
+    const p = v.substring(0, 10).split("-");
+    return `${p[2]}-${p[1]}-${p[0]}`;
+  }
+
+  if (typeof v === "number") return String(v).padStart(2, "0");
+  if (/^\d+$/.test(v)) return v.padStart(2, "0");
+
+  return v;
+}
+
+// SEARCH COMPARE FORMAT
+function normalizeForCompare(v) {
+  if (v === null || v === undefined) return "";
+  if (typeof v === "number") return String(v).padStart(2, "0");
+  if (/^\d+$/.test(v)) return v.padStart(2, "0");
+  return "";
+}
+
+// INIT
+window.onload = () => {
+  for (let g in groups) {
+    searchGroup.innerHTML += `<option>${g}</option>`;
+    resultGroup1.innerHTML += `<option>${g}</option>`;
+    resultGroup2.innerHTML += `<option>${g}</option>`;
+  }
+  toggleMode();
+  loadSheet();
+};
+
+// MODE SWITCH
+function toggleMode() {
+  groupBox.classList.toggle("hidden", searchMode.value === "value");
+  valueBox.classList.toggle("hidden", searchMode.value === "group");
+  resetAll();
+}
+
+// LOAD DATA
+function loadSheet() {
+  fetch(WEB_APP_URL)
+    .then(r => r.text())
+    .then(t => {
+      sheetData = JSON.parse(t);
+      renderTable();
+    });
+}
+
+// RENDER TABLE
+function renderTable() {
+  let html = "<table>";
+  cellMap = {};
+
+  sheetData.forEach((row, r) => {
+    html += "<tr>";
+    row.forEach((cell, c) => {
+      const id = `cell-${r}-${c}`;
+      cellMap[id] = { r, c };
+
+      const displayVal = normalizeForDisplay(cell);
+      let cls = "";
+
+      if (
+        (typeof cell === "number" && cell >= 0 && cell <= 99) ||
+        (typeof cell === "string" && /^\d{1,2}$/.test(cell))
+      ) {
+        cls = "num";
+      }
+
+      html += `<td id="${id}" class="${cls}">${displayVal}</td>`;
+    });
+    html += "</tr>";
+  });
+
+  html += "</table>";
+  table.innerHTML = html;
+}
+
+// RESET
+function resetAll() {
+  highlights = [];
+  currentIndex = -1;
+  Object.keys(cellMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("search","result","result2");
+  });
+}
+
+// SEARCH ENTRY
+function search() {
+  resetAll();
+  searchMode.value === "group" ? runGroup() : runValue();
+}
+
+// GROUP SEARCH
+function runGroup() {
+  const sCol = +searchCol.value;
+  const r1 = +resultCol1.value;
+  const r2 = resultCol2.value ? +resultCol2.value : null;
+
+  const sVals = groups[searchGroup.value];
+  const rv1 = groups[resultGroup1.value];
+  const rv2 = r2 ? groups[resultGroup2.value] : [];
+
+  sheetData.forEach((row, r) => {
+    row.forEach((cell, c) => {
+      const v = normalizeForCompare(cell);
+      const el = document.getElementById(`cell-${r}-${c}`);
+      if (!el) return;
+
+      if (c === sCol && sVals.includes(v)) {
+        el.classList.add("search");
+        highlights.push({ r, c });
+      }
+      if (c === r1 && rv1.includes(v)) el.classList.add("result");
+      if (r2 !== null && c === r2 && rv2.includes(v)) el.classList.add("result2");
+    });
+  });
+}
+
+// VALUE SEARCH
+function runValue() {
+  const sCol = +searchCol.value;
+  const sv  = normalizeForCompare(searchValue.value);
+
+  const r1  = +valResultCol1.value;
+  const rv1 = normalizeForCompare(resultValue1.value);
+
+  const r2  = valResultCol2.value ? +valResultCol2.value : null;
+  const rv2 = normalizeForCompare(resultValue2.value);
+
+  sheetData.forEach((row, r) => {
+    row.forEach((cell, c) => {
+      const v = normalizeForCompare(cell);
+      const el = document.getElementById(`cell-${r}-${c}`);
+      if (!el || v === "") return;
+
+      if (c === sCol && v === sv) {
+        el.classList.add("search");
+        highlights.push({ r, c });
+      }
+      if (c === r1 && v === rv1) el.classList.add("result");
+      if (r2 !== null && c === r2 && v === rv2) el.classList.add("result2");
+    });
+  });
+}
+
+// NAVIGATION
+function next() {
+  if (!highlights.length) return;
+  currentIndex = (currentIndex + 1) % highlights.length;
+  scrollTo(highlights[currentIndex]);
+}
+
+function prev() {
+  if (!highlights.length) return;
+  currentIndex = (currentIndex - 1 + highlights.length) % highlights.length;
+  scrollTo(highlights[currentIndex]);
+}
+
+function scrollTo(p) {
+  const el = document.getElementById(`cell-${p.r}-${p.c}`);
+  if (el) el.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+
+// EXPORT
+function exportCSV() {
+  if (!highlights.length) return alert("No data to export");
+
+  const rows = [...new Set(highlights.map(h => h.r))];
+  let csv = "";
+
+  rows.forEach(r => {
+    csv += sheetData[r].map(v => normalizeForDisplay(v)).join(",") + "\n";
+  });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  a.download = "search_results.csv";
+  a.click();
+}
+
